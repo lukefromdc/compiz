@@ -2189,9 +2189,9 @@ handleEvent (CompDisplay *d,
     case CirculateRequest:
 	break;
     case FocusIn:
+    w = findTopLevelWindowAtDisplay (d, event->xfocus.window);
 	if (event->xfocus.mode != NotifyGrab)
 	{
-	    w = findTopLevelWindowAtDisplay (d, event->xfocus.window);
 	    if (w && w->managed)
 	    {
 		unsigned int state = w->state;
@@ -2210,8 +2210,7 @@ handleEvent (CompDisplay *d,
 		}
 
 		state &= ~CompWindowStateDemandsAttentionMask;
-        /*Set the focussed window state atom */
-        changeWindowState (w, w->state | CompWindowStateFocusedMask);
+		changeWindowState (w, state);
 	    }
 	    else
 	    {
@@ -2226,14 +2225,32 @@ handleEvent (CompDisplay *d,
 		    {
 			/* we don't want the root window to get focus */
 			focusDefaultWindow (s);
-            /*Set the focussed window state atom */
-            changeWindowState (w, w->state);
 		    }
 		}
 	    }
 
 	    if (d->nextActiveWindow == event->xfocus.window)
 		d->nextActiveWindow = None;
+	}
+
+	if (w)
+	{
+		CompWindow *tmp;
+		for (s = d->screens; s; s = s->next)
+		{
+			if (s)
+			{
+				for (tmp = s->windows; tmp; tmp = tmp->next)
+				{
+					/* Unset focused bit for all windows */
+					if (tmp->state & CompWindowStateFocusedMask)
+						changeWindowState (tmp, tmp->state & ~CompWindowStateFocusedMask);
+				}
+			}
+		}
+
+		/* Set the focused window state atom */
+		changeWindowState (w, w->state | CompWindowStateFocusedMask);
 	}
 	break;
     case EnterNotify:
