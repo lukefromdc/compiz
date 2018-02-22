@@ -2210,7 +2210,8 @@ handleEvent (CompDisplay *d,
 		}
 
 		state &= ~CompWindowStateDemandsAttentionMask;
-		changeWindowState (w, state);
+        /*Set the focussed window state atom */
+        changeWindowState (w, w->state | CompWindowStateFocusedMask);
 	    }
 	    else
 	    {
@@ -2225,6 +2226,8 @@ handleEvent (CompDisplay *d,
 		    {
 			/* we don't want the root window to get focus */
 			focusDefaultWindow (s);
+            /*Set the focussed window state atom */
+            changeWindowState (w, w->state);
 		    }
 		}
 	    }
